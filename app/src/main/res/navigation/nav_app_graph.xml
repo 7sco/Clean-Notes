@@ -9,13 +9,19 @@
         android:id="@+id/nav_notes_graph"
         app:moduleName="@string/module_notes_name"
         app:graphResName="nav_notes_graph"
-        app:graphPackage="com.codingwithmitch.cleannotes.notes" />
+        app:graphPackage="com.codingwithmitch.cleannotes.notes"
+        >
+
+
+    </include-dynamic>
 
 
     <include-dynamic
         android:id="@+id/nav_settings_graph"
         app:moduleName="@string/module_settings_name"
         app:graphResName="nav_settings_graph"
-        app:graphPackage="com.codingwithmitch.cleannotes.settings" />
+        app:graphPackage="com.codingwithmitch.cleannotes.settings">
+
+    </include-dynamic>
 
 </navigation>

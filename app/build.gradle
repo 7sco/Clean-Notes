@@ -27,9 +27,6 @@ android {
     dynamicFeatures = [Modules.notes, Modules.settings]
 
 
-
-
-
 }
 
 dependencies {
