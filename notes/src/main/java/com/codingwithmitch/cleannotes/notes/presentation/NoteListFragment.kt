@@ -6,7 +6,7 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.codingwithmitch.cleannotes.presentation.MainActivity
-import com.codingwithmitch.cleannotes.presentation.MyNavController
+import com.codingwithmitch.cleannotes.presentation.MainNavController
 import com.codingwithmitch.notes.R
 import kotlinx.android.synthetic.main.fragment_note_list.*
 import java.lang.ClassCastException
@@ -14,7 +14,7 @@ import java.lang.ClassCastException
 
 class NoteListFragment : Fragment(R.layout.fragment_note_list) {
 
-    lateinit var navController: MyNavController
+    lateinit var navController: MainNavController
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

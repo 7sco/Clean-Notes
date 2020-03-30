@@ -5,7 +5,8 @@ import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
 import com.codingwithmitch.cleannotes.presentation.MainActivity
-import com.codingwithmitch.cleannotes.presentation.MyNavController
+import com.codingwithmitch.cleannotes.presentation.MainNavController
+import com.codingwithmitch.cleannotes.presentation.UIController
 import com.codingwithmitch.settings.R
 import kotlinx.android.synthetic.main.fragment_settings.*
 import java.lang.ClassCastException
@@ -13,7 +14,7 @@ import java.lang.ClassCastException
 
 class SettingsFragment : Fragment(R.layout.fragment_settings) {
 
-    lateinit var navController: MyNavController
+    lateinit var navController: MainNavController
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -31,3 +32,11 @@ class SettingsFragment : Fragment(R.layout.fragment_settings) {
         }
     }
 }
+
+
+
+
+
+
+
+
