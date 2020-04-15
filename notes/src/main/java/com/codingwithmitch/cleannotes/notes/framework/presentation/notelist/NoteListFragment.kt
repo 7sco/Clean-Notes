@@ -219,9 +219,9 @@ class NoteListFragment : BaseNoteFragment(R.layout.fragment_note_list),
 
     // for debugging
     private fun printActiveJobs(){
-        for((key, job) in viewModel.getActiveJobs()){
+        for((index, job) in viewModel.getActiveJobs().withIndex()){
             printLogD("NoteList",
-                "${key}: ${job}")
+                "${index}: ${job}")
         }
     }
 
@@ -276,7 +276,8 @@ class NoteListFragment : BaseNoteFragment(R.layout.fragment_note_list),
     private fun initSearchView(){
 
         // THIS WILL NOT WORK.....?
-        // val searchPlate: SearchView.SearchAutoComplete? = search_view.findViewById(R.id.search_src_text)
+         val searchPlate: SearchView.SearchAutoComplete?
+                 = search_view.findViewById(androidx.appcompat.R.id.search_src_text)
 
 
         // So I made this stupid hack

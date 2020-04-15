@@ -29,6 +29,7 @@ object Versions {
     val lifecycle_version = "2.2.0-alpha03"
     val retrofit2_version = "2.6.0"
     val markdown_processor = "0.1.3"
+    val work_version = "2.3.4"
 }
 
 object Dependencies {
@@ -54,6 +55,7 @@ object Dependencies {
     val retrofit = "com.squareup.retrofit2:retrofit:${Versions.retrofit2_version}"
     val retrofit_gson = "com.squareup.retrofit2:converter-gson:${Versions.retrofit2_version}"
     val markdown_processor = "com.yydcdut:markdown-processor:${Versions.markdown_processor}"
+    val work_manager =  "androidx.work:work-runtime-ktx:${Versions.work_version}"
 }
 
 object TestDependencies{
