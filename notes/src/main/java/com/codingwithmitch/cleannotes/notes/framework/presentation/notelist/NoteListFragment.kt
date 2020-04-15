@@ -275,41 +275,18 @@ class NoteListFragment : BaseNoteFragment(R.layout.fragment_note_list),
 
     private fun initSearchView(){
 
-        // THIS WILL NOT WORK.....?
-         val searchPlate: SearchView.SearchAutoComplete?
-                 = search_view.findViewById(androidx.appcompat.R.id.search_src_text)
+        val searchPlate: SearchView.SearchAutoComplete?
+                = search_view.findViewById(androidx.appcompat.R.id.search_src_text)
 
-
-        // So I made this stupid hack
-        for((index1, child) in search_view.children.withIndex()){
-//            printLogD("ListFragment", "${index1}, ${child}")
-            for((index2, child2) in (child as ViewGroup).children.withIndex()){
-//                printLogD("ListFragment", "T2: ${index2}, ${child2}")
-                if(child2 is ViewGroup){
-                    for((index3, child3) in (child2 as ViewGroup).children.withIndex()){
-//                        printLogD("ListFragment", "T3: ${index3}, ${child3}")
-                        if(child3 is ViewGroup){
-                            for((index4, child4) in (child3 as ViewGroup).children.withIndex()){
-//                                printLogD("ListFragment", "T4: ${index4}, ${child4}")
-                                if(child4 is SearchView.SearchAutoComplete){
-                                    child4.setOnEditorActionListener { v, actionId, event ->
-                                        if (actionId == EditorInfo.IME_ACTION_UNSPECIFIED
-                                            || actionId == EditorInfo.IME_ACTION_SEARCH ) {
-                                            val searchQuery = v.text.toString()
-//                                            printLogD("NoteList", "SearchView: (keyboard or arrow) executing search...: ${searchQuery}")
-                                            viewModel.setQuery(searchQuery).let{
-                                                viewModel.loadFirstPage()
-                                            }
-                                        }
-                                        true
-                                    }
-                                    break
-                                }
-                            }
-                        }
-                    }
+        searchPlate?.setOnEditorActionListener { v, actionId, event ->
+            if (actionId == EditorInfo.IME_ACTION_UNSPECIFIED
+                || actionId == EditorInfo.IME_ACTION_SEARCH ) {
+                val searchQuery = v.text.toString()
+                viewModel.setQuery(searchQuery).let{
+                    viewModel.loadFirstPage()
                 }
             }
+            true
         }
     }
 }
