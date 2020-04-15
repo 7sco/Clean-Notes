@@ -6,7 +6,7 @@ import com.codingwithmitch.cleannotes.notes.framework.presentation.notelist.stat
 // Use cases
 class NoteListInteractors (
     val insertNewNote: InsertNewNote,
-    val deleteNote: DeleteNote<NoteListViewState>,
+    val deleteNote: DeleteNote,
     val searchNotes: SearchNotes,
     val getNumNotes: GetNumNotes
 )

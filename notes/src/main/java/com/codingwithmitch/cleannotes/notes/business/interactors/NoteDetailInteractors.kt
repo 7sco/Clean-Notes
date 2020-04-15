@@ -5,7 +5,6 @@ import com.codingwithmitch.cleannotes.notes.framework.presentation.notedetail.st
 
 // Use cases
 class NoteDetailInteractors (
-    val deleteNote: DeleteNote<NoteDetailViewState>,
     val updateNote: UpdateNote
 )
 

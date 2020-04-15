@@ -153,6 +153,7 @@ constructor(
             update.noteList = list
             setViewState(update)
         }
+
     }
 
     // can be selected from Recyclerview or created new from dialog

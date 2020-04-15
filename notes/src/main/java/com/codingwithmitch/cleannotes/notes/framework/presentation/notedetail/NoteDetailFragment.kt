@@ -3,6 +3,7 @@ package com.codingwithmitch.cleannotes.notes.framework.presentation.notedetail
 import android.os.Bundle
 import android.view.View
 import androidx.activity.OnBackPressedCallback
+import androidx.core.os.bundleOf
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -24,6 +25,7 @@ import com.codingwithmitch.cleannotes.notes.framework.presentation.notedetail.st
 import com.codingwithmitch.cleannotes.notes.framework.presentation.notedetail.state.NoteDetailViewState
 import com.codingwithmitch.cleannotes.notes.framework.presentation.notedetail.state.NoteInteractionState.DefaultState
 import com.codingwithmitch.cleannotes.notes.framework.presentation.notedetail.state.NoteInteractionState.EditState
+import com.codingwithmitch.cleannotes.notes.framework.presentation.notelist.NOTE_PENDING_DELETE_BUNDLE_KEY
 import com.codingwithmitch.cleannotes.notes.workmanager.DeleteNoteWorker
 import com.codingwithmitch.cleannotes.notes.workmanager.ProgressWorker
 import com.codingwithmitch.cleannotes.presentation.MainActivity
@@ -410,36 +412,13 @@ class NoteDetailFragment : BaseNoteFragment(R.layout.fragment_note_detail) {
         )
     }
 
-    private fun testWorkManager(){
-
-        activity?.let {
-
-            val stringData = workDataOf("primary_key" to viewModel.getNote()?.id)
-
-            val workRequest = OneTimeWorkRequestBuilder<DeleteNoteWorker>()
-                .setInputData(stringData)
-                .addTag(MainActivity.DELETE_NOTE_JOB_TAG)
-                .build()
-
-            WorkManager.getInstance(it)
-                .beginWith(workRequest)
-                .enqueue()
-        }
-
-        findNavController().popBackStack()
-    }
-
     private fun initiateDeleteTransaction(){
-        testWorkManager()
+        val bundle = bundleOf(NOTE_PENDING_DELETE_BUNDLE_KEY to viewModel.getNote())
+        findNavController().navigate(
+            R.id.action_note_detail_fragment_to_noteListFragment,
+            bundle
+        )
     }
-
-//    private fun initiateDeleteTransaction(){
-//        val bundle = bundleOf(NOTE_PENDING_DELETE_BUNDLE_KEY to viewModel.getNote())
-//        findNavController().navigate(
-//            R.id.action_note_detail_fragment_to_noteListFragment,
-//            bundle
-//        )
-//    }
 
     private fun setupOnBackPressDispatcher() {
         val callback = object : OnBackPressedCallback(true) {

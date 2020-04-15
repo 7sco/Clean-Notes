@@ -1,15 +1,24 @@
 package com.codingwithmitch.cleannotes.notes.workmanager
 
 import android.content.Context
+import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import com.codingwithmitch.cleannotes.core.business.cache.CacheResponseHandler
 import com.codingwithmitch.cleannotes.core.business.safeCacheCall
+import com.codingwithmitch.cleannotes.core.business.state.DataState
+import com.codingwithmitch.cleannotes.core.business.state.MessageType
+import com.codingwithmitch.cleannotes.core.business.state.Response
+import com.codingwithmitch.cleannotes.core.business.state.UIComponentType
 import com.codingwithmitch.cleannotes.core.util.printLogD
 import com.codingwithmitch.cleannotes.di.AppComponent
 import com.codingwithmitch.cleannotes.notes.business.domain.repository.NoteRepository
 import com.codingwithmitch.cleannotes.notes.business.interactors.use_cases.DeleteNote
+import com.codingwithmitch.cleannotes.notes.business.interactors.use_cases.DeleteNote.Companion.DELETE_NOTE_FAILED
+import com.codingwithmitch.cleannotes.notes.business.interactors.use_cases.DeleteNote.Companion.DELETE_NOTE_SUCCESS
 import com.codingwithmitch.cleannotes.notes.di.NotesFeatureImpl
+import com.codingwithmitch.cleannotes.notes.framework.presentation.notelist.state.NoteListViewState
 import com.codingwithmitch.cleannotes.presentation.BaseApplication
 import com.codingwithmitch.cleannotes.presentation.MainActivity
 import kotlinx.coroutines.Dispatchers
@@ -35,33 +44,104 @@ constructor(
 
     override suspend fun doWork(): Result {
 
-        val appComponent = (applicationContext as BaseApplication).appComponent
-        val noteComponent = (appComponent.notesFeature() as NotesFeatureImpl)
-            .getProvider().noteComponent
-        noteComponent?.inject(this)
+        return try{
 
-        if(!::noteRepository.isInitialized){
-            throw CancellationException("DeleteNoteWorker: Must set the NoteRepository.")
-        }
-        primaryKey = inputData.getInt("primary_key", -1)
-        if(primaryKey < 0){
-            throw CancellationException("DeleteNoteWorker: Missing primary key.")
-        }
+            val appComponent = (applicationContext as BaseApplication).appComponent
+            val noteComponent = (appComponent.notesFeature() as NotesFeatureImpl)
+                .getProvider().noteComponent
+            noteComponent?.inject(this)
 
-        // show "undo" snackbar for canceling the delete
-        setProgress(
-            workDataOf(
-                MainActivity.STATE_MESSAGE to MainActivity.SHOW_UNDO_SNACKBAR
+            if(!::noteRepository.isInitialized){
+                throw CancellationException("DeleteNoteWorker: Must set the NoteRepository.")
+            }
+            primaryKey = inputData.getInt(DELETE_NOTE_WORKER_ARG_PK, -1)
+            if(primaryKey < 0){
+                throw CancellationException("DeleteNoteWorker: Missing primary key.")
+            }
+
+            // show "undo" snackbar for canceling the delete
+            setProgress(
+                workDataOf(
+                    MainActivity.STATE_MESSAGE to MainActivity.SHOW_UNDO_SNACKBAR
+                )
             )
-        )
-        delay(DeleteNote.DELETE_UNDO_TIMEOUT)
+            delay(DeleteNote.DELETE_UNDO_TIMEOUT)
 
-        val cacheResult = safeCacheCall(Dispatchers.IO){
-            noteRepository.deleteNote(primaryKey)
+            val cacheResult = safeCacheCall(Dispatchers.IO){
+                noteRepository.deleteNote(primaryKey)
+            }
+
+            val result = object: CacheResponseHandler<NoteListViewState, Int>(
+                response = cacheResult,
+                stateEvent = null
+            ){
+                override suspend fun handleSuccess(resultObj: Int): DataState<NoteListViewState> {
+                    return if(resultObj > 0){
+                        DataState.data(
+                            response = Response(
+                                message = DELETE_NOTE_SUCCESS,
+                                uiComponentType = UIComponentType.None(),
+                                messageType = MessageType.Success()
+                            ),
+                            data = null,
+                            stateEvent = null
+                        )
+                    }
+                    else{
+                        DataState.data(
+                            response = Response(
+                                message = DELETE_NOTE_FAILED,
+                                uiComponentType = UIComponentType.Toast(),
+                                messageType = MessageType.Error()
+                            ),
+                            data = null,
+                            stateEvent = null
+                        )
+                    }
+                }
+            }.getResult()
+
+            when(result.stateMessage?.response?.message){
+
+                DELETE_NOTE_FAILED -> {
+                    Result.failure(
+                        workDataOf(
+                            MainActivity.STATE_MESSAGE to DELETE_NOTE_FAILED
+                        )
+                    )
+                }
+
+                DELETE_NOTE_SUCCESS -> {
+                    Result.success(
+                        workDataOf(
+                            MainActivity.STATE_MESSAGE to DELETE_NOTE_SUCCESS
+                        )
+                    )
+                }
+
+                else -> {
+                    Result.failure(
+                        workDataOf(
+                            MainActivity.STATE_MESSAGE to DELETE_NOTE_FAILED
+                        )
+                    )
+                }
+            }
+        }catch (e: CancellationException){
+            Log.e("WorkManager", "DeleteNoteWorker: cancelled! ${e.printStackTrace()}")
+            Result.failure(
+                workDataOf(
+                    MainActivity.STATE_MESSAGE to DELETE_NOTE_FAILED
+                )
+            )
         }
 
+    }
 
-        return Result.success()
+
+    companion object{
+
+        const val DELETE_NOTE_WORKER_ARG_PK = "primary_key"
     }
 
 

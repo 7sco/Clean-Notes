@@ -1,6 +1,7 @@
 package com.codingwithmitch.notes.di
 
 import androidx.room.Room
+import androidx.work.WorkManager
 import androidx.work.WorkerFactory
 import com.codingwithmitch.cleannotes.core.di.scopes.FeatureScope
 import com.codingwithmitch.cleannotes.di.features.notes.NotesFeature
@@ -99,38 +100,53 @@ object NoteModule {
     @JvmStatic
     @FeatureScope
     @Provides
+    fun provideWorkManager(baseApplication: BaseApplication): WorkManager {
+        return WorkManager.getInstance(baseApplication)
+    }
+
+    @JvmStatic
+    @FeatureScope
+    @Provides
     fun provideNoteDetailInteractors(
         noteRepository: NoteRepository
     ): NoteDetailInteractors{
         return NoteDetailInteractors(
-            DeleteNote(noteRepository),
             UpdateNote(noteRepository)
         )
     }
+
+//    @JvmStatic
+//    @FeatureScope
+//    @Provides
+//    fun provideNoteListInteractors(
+//        noteRepository: NoteRepository,
+//        noteFactory: NoteFactory,
+//        workManager: WorkManager
+//    ): NoteListInteractors{
+//        return NoteListInteractors(
+//            InsertNewNote(noteRepository, noteFactory),
+//            DeleteNote(noteRepository, workManager),
+//            SearchNotes(noteRepository),
+//            GetNumNotes(noteRepository)
+//
+//        )
+//    }
 
     @JvmStatic
     @FeatureScope
     @Provides
     fun provideNoteListInteractors(
         noteRepository: NoteRepository,
-        noteFactory: NoteFactory
+        noteFactory: NoteFactory,
+        workManager: WorkManager
     ): NoteListInteractors{
         return NoteListInteractors(
             InsertNewNote(noteRepository, noteFactory),
-            DeleteNote(noteRepository),
+            DeleteNote(workManager),
             SearchNotes(noteRepository),
             GetNumNotes(noteRepository)
 
         )
-    }
-
-    @JvmStatic
-    @FeatureScope
-    @Provides
-    fun provideWorkManagerFactory(
-        noteRepository: NoteRepository
-    ): WorkerFactory{
-        return NoteWorkerFactory(noteRepository)
     }
 
 }
