@@ -7,6 +7,7 @@ import dependencies.TestDependencies
 import dependencies.Versions
 import dependencies.AnnotationProcessorsDependencies
 import dependencies.JavaVersion
+import dependencies.GoogleGuavaConflict
 
 apply plugin: 'com.android.application'
 
@@ -70,6 +71,11 @@ dependencies {
     implementation Dependencies.leak_canary
     implementation Dependencies.dagger
     implementation Dependencies.firestore
+    implementation Dependencies.work_manager
+
+    // https://stackoverflow.com/questions/56639529/duplicate-class-com-google-common-util-concurrent-listenablefuture-found-in-modu
+    // The conflict is caused by WorkManager dependency
+    implementation GoogleGuavaConflict.guava_conflict
 
     implementation SupportDependencies.appcompat
     implementation SupportDependencies.constraintlayout

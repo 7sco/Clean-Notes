@@ -1,5 +1,6 @@
 import dependencies.Dependencies
 import dependencies.AnnotationProcessorsDependencies
+import dependencies.GoogleGuavaConflict
 import dependencies.SupportDependencies
 
 apply plugin: 'com.android.library'

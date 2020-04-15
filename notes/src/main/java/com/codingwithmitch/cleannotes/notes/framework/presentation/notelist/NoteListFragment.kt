@@ -18,6 +18,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.work.*
 import com.codingwithmitch.cleannotes.core.business.state.*
 import com.codingwithmitch.cleannotes.core.framework.DialogInputCaptureCallback
 import com.codingwithmitch.cleannotes.core.framework.TopSpacingItemDecoration
@@ -30,6 +31,8 @@ import com.codingwithmitch.cleannotes.notes.framework.presentation.BaseNoteFragm
 import com.codingwithmitch.cleannotes.notes.framework.presentation.notedetail.NOTE_DETAIL_SELECTED_NOTE_BUNDLE_KEY
 import com.codingwithmitch.cleannotes.notes.framework.presentation.notelist.state.NoteListStateEvent.*
 import com.codingwithmitch.cleannotes.notes.framework.presentation.notelist.state.NoteListViewState
+import com.codingwithmitch.cleannotes.notes.workmanager.ProgressWorker
+import com.codingwithmitch.cleannotes.notes.workmanager.ProgressWorker.Companion.Progress
 import com.codingwithmitch.notes.R
 import kotlinx.android.synthetic.main.fragment_note_list.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -93,6 +96,48 @@ class NoteListFragment : BaseNoteFragment(R.layout.fragment_note_list),
         }
 
         restoreInstanceState(savedInstanceState)
+
+        testWorkManager()
+    }
+
+    private fun testWorkManager(){
+
+        activity?.let {
+
+            val stringData = workDataOf("input_data" to "Starting the THING.")
+
+            val uploadWorkRequest = OneTimeWorkRequestBuilder<ProgressWorker>()
+                .setInputData(stringData)
+                .addTag("deleteNote")
+                .build()
+
+            WorkManager.getInstance(it)
+                .beginWith(uploadWorkRequest)
+                .enqueue()
+
+            WorkManager.getInstance(it.applicationContext)
+                .getWorkInfoByIdLiveData(uploadWorkRequest.id)
+                .observe(viewLifecycleOwner, Observer { workInfo: WorkInfo? ->
+                    if (workInfo != null) {
+                        val progress = workInfo.progress
+                        val value = progress.getInt(Progress, 0)
+                        printLogD("WorkManager: (observer)", "progressValue: ${value}")
+                        printLogD("WorkManager: (observer)", "outputData: ${workInfo.outputData}")
+                    }
+                })
+//                .getWorkInfosByTagLiveData("deleteNote")
+//                .observe(viewLifecycleOwner, Observer { workInfoList: MutableList<WorkInfo?> ->
+//                    for((index,workInfo) in workInfoList.withIndex()){
+//                        if (workInfo != null) {
+//                            val progress = workInfo.progress
+//                            val value = progress.getInt(Progress, 0)
+//                            printLogD("WorkManager: (observer)", "I${index}, progressValue: ${value}")
+//                            printLogD("WorkManager: (observer)", "I${index}, outputData: ${workInfo.outputData}")
+//                        }
+//                    }
+//                })
+        }
+
     }
 
     override fun onResume() {

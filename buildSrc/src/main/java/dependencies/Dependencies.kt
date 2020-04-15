@@ -58,6 +58,10 @@ object Dependencies {
     val work_manager =  "androidx.work:work-runtime-ktx:${Versions.work_version}"
 }
 
+object GoogleGuavaConflict {
+    val guava_conflict = "com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava"
+}
+
 object TestDependencies{
 
     val kotlin_test = "org.jetbrains.kotlin:kotlin-test-junit:${Versions.kotlin}"

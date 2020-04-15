@@ -1,4 +1,5 @@
 import dependencies.Dependencies
+import dependencies.GoogleGuavaConflict
 import dependencies.Modules
 import dependencies.SupportDependencies
 import dependencies.TestDependencies
@@ -51,7 +52,7 @@ dependencies {
     implementation Dependencies.room_runtime
     implementation Dependencies.room_ktx
     implementation Dependencies.markdown_processor
-//    implementation Dependencies.work_manager
+    implementation Dependencies.work_manager
 
     implementation SupportDependencies.appcompat
     implementation SupportDependencies.constraintlayout
