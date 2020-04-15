@@ -15,6 +15,14 @@ class DeleteNote<ViewState>(
     private val noteRepository: NoteRepository
 ){
 
+//    fun deleteNote(
+//        primaryKey: Int
+//    ){
+//        // start job with WorkManager
+//    }
+
+
+
     fun deleteNote(
         primaryKey: Int,
         stateEvent: StateEvent

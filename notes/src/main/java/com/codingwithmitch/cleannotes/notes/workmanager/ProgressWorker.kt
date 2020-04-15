@@ -4,7 +4,12 @@ import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import com.codingwithmitch.cleannotes.core.business.state.*
+import com.codingwithmitch.cleannotes.core.util.TodoCallback
 import com.codingwithmitch.cleannotes.core.util.printLogD
+import com.codingwithmitch.cleannotes.notes.business.interactors.use_cases.DeleteNote
+import com.codingwithmitch.cleannotes.presentation.MainActivity.WorkManagerConstants.SHOW_UNDO_SNACKBAR
+import com.codingwithmitch.cleannotes.presentation.MainActivity.WorkManagerConstants.STATE_MESSAGE
 import kotlinx.coroutines.delay
 
 class ProgressWorker(context: Context, parameters: WorkerParameters) :
@@ -18,6 +23,35 @@ class ProgressWorker(context: Context, parameters: WorkerParameters) :
     override suspend fun doWork(): Result {
         val inputData = this.inputData
         printLogD("WorkManager: (Progress Worker)", "input data: ${inputData}")
+//        val callback = object: TodoCallback{
+//            override fun execute() {
+//                this@ProgressWorker.stop()
+//            }
+//        }
+//        setProgress(
+//            workDataOf(
+//                STATE_MESSAGE to StateMessage(
+//                    response =  Response(
+//                        message = DeleteNote.DELETE_NOTE_PENDING,
+//                        uiComponentType = UIComponentType.SnackBar(
+//                            object: SnackbarUndoCallback {
+//                                override fun undo() {
+//                                    callback.execute()
+//                                }
+//                            }
+//                        ),
+//                        messageType = MessageType.Info()
+//                    )
+//                )
+//            )
+//        )
+
+        setProgress(
+            workDataOf(
+                STATE_MESSAGE to SHOW_UNDO_SNACKBAR
+            )
+        )
+        delay(200L)
         val update1 = workDataOf(Progress to 0)
         setProgress(update1)
         delay(delayDuration)

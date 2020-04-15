@@ -2,35 +2,30 @@ package com.codingwithmitch.cleannotes.notes.framework.presentation.notedetail
 
 import android.os.Bundle
 import android.view.View
-import android.view.WindowManager
 import androidx.activity.OnBackPressedCallback
-import androidx.core.os.bundleOf
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.codingwithmitch.cleannotes.R.drawable
 import com.codingwithmitch.cleannotes.core.business.state.*
 import com.codingwithmitch.cleannotes.core.framework.*
-import com.codingwithmitch.cleannotes.core.util.printLogD
 import com.codingwithmitch.cleannotes.notes.business.domain.model.Note
-import com.codingwithmitch.cleannotes.notes.business.interactors.use_cases.DeleteNote
 import com.codingwithmitch.cleannotes.notes.business.interactors.use_cases.DeleteNote.Companion.DELETE_ARE_YOU_SURE
-import com.codingwithmitch.cleannotes.notes.business.interactors.use_cases.DeleteNote.Companion.DELETE_NOTE_PENDING
-import com.codingwithmitch.cleannotes.notes.business.interactors.use_cases.DeleteNote.Companion.DELETE_NOTE_SUCCESS
 import com.codingwithmitch.cleannotes.notes.business.interactors.use_cases.UpdateNote.Companion.UPDATE_NOTE_FAILED_PK
 import com.codingwithmitch.cleannotes.notes.business.interactors.use_cases.UpdateNote.Companion.UPDATE_NOTE_SUCCESS
 import com.codingwithmitch.cleannotes.notes.framework.presentation.BaseNoteFragment
 import com.codingwithmitch.cleannotes.notes.framework.presentation.notedetail.state.CollapsingToolbarState.Collapsed
 import com.codingwithmitch.cleannotes.notes.framework.presentation.notedetail.state.CollapsingToolbarState.Expanded
-import com.codingwithmitch.cleannotes.notes.framework.presentation.notedetail.state.NoteDetailStateEvent
 import com.codingwithmitch.cleannotes.notes.framework.presentation.notedetail.state.NoteDetailStateEvent.*
 import com.codingwithmitch.cleannotes.notes.framework.presentation.notedetail.state.NoteDetailViewState
 import com.codingwithmitch.cleannotes.notes.framework.presentation.notedetail.state.NoteInteractionState.DefaultState
 import com.codingwithmitch.cleannotes.notes.framework.presentation.notedetail.state.NoteInteractionState.EditState
-import com.codingwithmitch.cleannotes.notes.framework.presentation.notelist.NOTE_LIST_STATE_BUNDLE_KEY
-import com.codingwithmitch.cleannotes.notes.framework.presentation.notelist.NOTE_PENDING_DELETE_BUNDLE_KEY
-import com.codingwithmitch.cleannotes.notes.framework.presentation.notelist.state.NoteListViewState
+import com.codingwithmitch.cleannotes.notes.workmanager.ProgressWorker
+import com.codingwithmitch.cleannotes.presentation.MainActivity
 import com.codingwithmitch.notes.R
 import com.google.android.material.appbar.AppBarLayout
 import com.yydcdut.markdown.MarkdownProcessor
@@ -414,13 +409,36 @@ class NoteDetailFragment : BaseNoteFragment(R.layout.fragment_note_detail) {
         )
     }
 
-    private fun initiateDeleteTransaction(){
-        val bundle = bundleOf(NOTE_PENDING_DELETE_BUNDLE_KEY to viewModel.getNote())
-        findNavController().navigate(
-            R.id.action_note_detail_fragment_to_noteListFragment,
-            bundle
-        )
+    private fun testWorkManager(){
+
+        activity?.let {
+
+            val stringData = workDataOf("input_data" to "Starting the THING.")
+
+            val workRequest = OneTimeWorkRequestBuilder<ProgressWorker>()
+                .setInputData(stringData)
+                .addTag(MainActivity.DELETE_NOTE_JOB_TAG)
+                .build()
+
+            WorkManager.getInstance(it)
+                .beginWith(workRequest)
+                .enqueue()
+        }
+
+        findNavController().popBackStack()
     }
+
+    private fun initiateDeleteTransaction(){
+        testWorkManager()
+    }
+
+//    private fun initiateDeleteTransaction(){
+//        val bundle = bundleOf(NOTE_PENDING_DELETE_BUNDLE_KEY to viewModel.getNote())
+//        findNavController().navigate(
+//            R.id.action_note_detail_fragment_to_noteListFragment,
+//            bundle
+//        )
+//    }
 
     private fun setupOnBackPressDispatcher() {
         val callback = object : OnBackPressedCallback(true) {
