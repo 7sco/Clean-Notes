@@ -3,22 +3,23 @@ package com.codingwithmitch.cleannotes.notes.business.interactors.use_cases
 import com.codingwithmitch.cleannotes.core.business.cache.CacheResponseHandler
 import com.codingwithmitch.cleannotes.core.business.safeCacheCall
 import com.codingwithmitch.cleannotes.core.business.state.*
-import com.codingwithmitch.cleannotes.core.util.printLogD
 import com.codingwithmitch.cleannotes.notes.business.domain.repository.NoteRepository
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import java.util.concurrent.atomic.AtomicBoolean
 
 class DeleteNote<ViewState>(
     private val noteRepository: NoteRepository
 ){
+//class DeleteNote<ViewState>(
+//    private val noteRepository: NoteRepository
+//){
 
 //    fun deleteNote(
 //        primaryKey: Int
 //    ){
-//        // start job with WorkManager
+//
 //    }
 
 

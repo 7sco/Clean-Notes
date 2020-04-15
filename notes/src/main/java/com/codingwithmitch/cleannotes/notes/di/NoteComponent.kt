@@ -5,6 +5,7 @@ import com.codingwithmitch.cleannotes.di.features.notes.NotesFeature
 import com.codingwithmitch.cleannotes.notes.di.NoteViewModelModule
 import com.codingwithmitch.cleannotes.notes.framework.presentation.notedetail.NoteDetailFragment
 import com.codingwithmitch.cleannotes.notes.framework.presentation.notelist.NoteListFragment
+import com.codingwithmitch.cleannotes.notes.workmanager.DeleteNoteWorker
 import dagger.BindsInstance
 import dagger.Component
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -28,6 +29,8 @@ interface NoteComponent {
     interface Factory {
         fun create(dependencies: NotesFeature.Dependencies): NoteComponent
     }
+
+    fun inject(deleteNoteWorker: DeleteNoteWorker)
 
     fun inject(noteListFragment: NoteListFragment)
 

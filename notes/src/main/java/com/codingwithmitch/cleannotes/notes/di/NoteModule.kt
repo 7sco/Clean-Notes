@@ -1,6 +1,7 @@
 package com.codingwithmitch.notes.di
 
 import androidx.room.Room
+import androidx.work.WorkerFactory
 import com.codingwithmitch.cleannotes.core.di.scopes.FeatureScope
 import com.codingwithmitch.cleannotes.di.features.notes.NotesFeature
 import com.codingwithmitch.cleannotes.notes.business.data.datasource.NoteCacheDataSource
@@ -13,6 +14,7 @@ import com.codingwithmitch.cleannotes.presentation.BaseApplication
 import com.codingwithmitch.cleannotes.core.business.DateUtil
 import com.codingwithmitch.cleannotes.notes.business.interactors.use_cases.*
 import com.codingwithmitch.cleannotes.notes.framework.datasource.mappers.NoteFactory
+import com.codingwithmitch.cleannotes.notes.workmanager.NoteWorkerFactory
 import com.codingwithmitch.notes.datasource.cache.db.NoteDao
 import com.codingwithmitch.notes.datasource.cache.db.NoteDatabase
 import com.codingwithmitch.notes.datasource.cache.db.NoteDatabase.Companion.DATABASE_NAME
@@ -120,6 +122,15 @@ object NoteModule {
             GetNumNotes(noteRepository)
 
         )
+    }
+
+    @JvmStatic
+    @FeatureScope
+    @Provides
+    fun provideWorkManagerFactory(
+        noteRepository: NoteRepository
+    ): WorkerFactory{
+        return NoteWorkerFactory(noteRepository)
     }
 
 }

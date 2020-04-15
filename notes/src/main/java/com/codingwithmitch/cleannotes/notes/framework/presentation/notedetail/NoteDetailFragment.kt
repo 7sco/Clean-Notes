@@ -24,6 +24,7 @@ import com.codingwithmitch.cleannotes.notes.framework.presentation.notedetail.st
 import com.codingwithmitch.cleannotes.notes.framework.presentation.notedetail.state.NoteDetailViewState
 import com.codingwithmitch.cleannotes.notes.framework.presentation.notedetail.state.NoteInteractionState.DefaultState
 import com.codingwithmitch.cleannotes.notes.framework.presentation.notedetail.state.NoteInteractionState.EditState
+import com.codingwithmitch.cleannotes.notes.workmanager.DeleteNoteWorker
 import com.codingwithmitch.cleannotes.notes.workmanager.ProgressWorker
 import com.codingwithmitch.cleannotes.presentation.MainActivity
 import com.codingwithmitch.notes.R
@@ -413,9 +414,9 @@ class NoteDetailFragment : BaseNoteFragment(R.layout.fragment_note_detail) {
 
         activity?.let {
 
-            val stringData = workDataOf("input_data" to "Starting the THING.")
+            val stringData = workDataOf("primary_key" to viewModel.getNote()?.id)
 
-            val workRequest = OneTimeWorkRequestBuilder<ProgressWorker>()
+            val workRequest = OneTimeWorkRequestBuilder<DeleteNoteWorker>()
                 .setInputData(stringData)
                 .addTag(MainActivity.DELETE_NOTE_JOB_TAG)
                 .build()

@@ -50,6 +50,9 @@ class NoteListFragment : BaseNoteFragment(R.layout.fragment_note_list),
 {
 
     @Inject
+    lateinit var workerFactory: WorkerFactory
+
+    @Inject
     lateinit var viewModelFactory: ViewModelProvider.Factory
 
     val viewModel: NoteListViewModel by viewModels {
@@ -182,6 +185,11 @@ class NoteListFragment : BaseNoteFragment(R.layout.fragment_note_list),
                     }
                     listAdapter?.submitList(noteList)
                     listAdapter?.notifyDataSetChanged()
+
+                    for(note in noteList){
+                        printLogD("List",
+                            "id: ${note.id}, title: ${note.title}")
+                    }
                 }
 
                 // a note been inserted or selected

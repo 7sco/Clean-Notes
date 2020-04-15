@@ -12,6 +12,7 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupWithNavController
+import androidx.work.Configuration
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import com.afollestad.materialdialogs.MaterialDialog
@@ -48,6 +49,7 @@ class MainActivity : AppCompatActivity(),
 
         retrieveTopLevelFragmentIds()
         setupBottomNavigation()
+
         setupWorkManagerJobObservers()
     }
 
@@ -58,6 +60,7 @@ class MainActivity : AppCompatActivity(),
         const val SHOW_UNDO_SNACKBAR = "show_undo_snackbar"
         const val DELETE_NOTE_PENDING = "Delete pending..."
     }
+
 
     private fun setupWorkManagerJobObservers(){
         WorkManager.getInstance(applicationContext)
