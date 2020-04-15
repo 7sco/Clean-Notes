@@ -1,16 +1,14 @@
 package com.codingwithmitch.cleannotes.notes.business.interactors.use_cases
 
+import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
-import com.codingwithmitch.cleannotes.core.business.cache.CacheResponseHandler
-import com.codingwithmitch.cleannotes.core.business.safeCacheCall
 import com.codingwithmitch.cleannotes.core.business.state.*
-import com.codingwithmitch.cleannotes.notes.business.domain.repository.NoteRepository
+import com.codingwithmitch.cleannotes.notes.framework.presentation.notelist.NoteListFragment.WorkManagerConstants.DELETE_NOTE_JOB_TAG
 import com.codingwithmitch.cleannotes.notes.framework.presentation.notelist.state.NoteListViewState
 import com.codingwithmitch.cleannotes.notes.workmanager.DeleteNoteWorker
 import com.codingwithmitch.cleannotes.notes.workmanager.DeleteNoteWorker.Companion.DELETE_NOTE_WORKER_ARG_PK
-import com.codingwithmitch.cleannotes.presentation.MainActivity
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -32,12 +30,15 @@ class DeleteNote(
         val stringData = workDataOf(DELETE_NOTE_WORKER_ARG_PK to primaryKey)
         val workRequest = OneTimeWorkRequestBuilder<DeleteNoteWorker>()
             .setInputData(stringData)
-            .addTag(MainActivity.DELETE_NOTE_JOB_TAG)
+            .addTag(DELETE_NOTE_JOB_TAG)
             .build()
 
         workManager
-            .beginWith(workRequest)
-            .enqueue()
+            .enqueueUniqueWork(
+                DELETE_NOTE_JOB_TAG,
+                ExistingWorkPolicy.REPLACE,
+                workRequest
+            )
 
         emit(
             DataState.data<NoteListViewState>(

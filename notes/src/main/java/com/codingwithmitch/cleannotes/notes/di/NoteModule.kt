@@ -15,7 +15,6 @@ import com.codingwithmitch.cleannotes.presentation.BaseApplication
 import com.codingwithmitch.cleannotes.core.business.DateUtil
 import com.codingwithmitch.cleannotes.notes.business.interactors.use_cases.*
 import com.codingwithmitch.cleannotes.notes.framework.datasource.mappers.NoteFactory
-import com.codingwithmitch.cleannotes.notes.workmanager.NoteWorkerFactory
 import com.codingwithmitch.notes.datasource.cache.db.NoteDao
 import com.codingwithmitch.notes.datasource.cache.db.NoteDatabase
 import com.codingwithmitch.notes.datasource.cache.db.NoteDatabase.Companion.DATABASE_NAME

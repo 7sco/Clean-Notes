@@ -7,14 +7,10 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.inputmethod.InputMethodManager
-import androidx.lifecycle.Observer
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupWithNavController
-import androidx.work.Configuration
-import androidx.work.WorkInfo
-import androidx.work.WorkManager
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.callbacks.onDismiss
 import com.afollestad.materialdialogs.input.input
@@ -22,7 +18,6 @@ import com.codingwithmitch.cleannotes.R
 import com.codingwithmitch.cleannotes.core.business.state.*
 import com.codingwithmitch.cleannotes.core.business.state.UIComponentType.*
 import com.codingwithmitch.cleannotes.core.framework.*
-import com.codingwithmitch.cleannotes.core.util.printLogD
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_main.*
@@ -49,69 +44,7 @@ class MainActivity : AppCompatActivity(),
 
         retrieveTopLevelFragmentIds()
         setupBottomNavigation()
-
-//        setupWorkManagerJobObservers()
     }
-
-    companion object WorkManagerConstants {
-
-        const val DELETE_NOTE_JOB_TAG = "delete_note"
-        const val STATE_MESSAGE = "state_message"
-        const val SHOW_UNDO_SNACKBAR = "show_undo_snackbar"
-        const val DELETE_NOTE_PENDING = "Delete pending..."
-    }
-
-
-//    private fun setupWorkManagerJobObservers(){
-//        WorkManager.getInstance(applicationContext)
-//            .getWorkInfosByTagLiveData(DELETE_NOTE_JOB_TAG)
-//            .observe(this, Observer { workInfoList: MutableList<WorkInfo?> ->
-//                for(workInfo in workInfoList){
-//                    if (workInfo != null) {
-//                        if(workInfo.state == WorkInfo.State.RUNNING){
-//                            val progress = workInfo.progress
-//                            val stateMessage: String? = progress.getString(STATE_MESSAGE)
-//                            printLogD("WorkManager: (observer)", "stateMessage: ${stateMessage}")
-//                            stateMessage?.let { message ->
-//                                if(message.equals(SHOW_UNDO_SNACKBAR)){
-//                                    showUndoSnackbar_deleteNote()
-//                                }
-//                            }
-//                            val value = progress.getInt("Progress", 0)
-//                            printLogD("WorkManager: (observer)", "progressValue: ${value}")
-//                            printLogD("WorkManager: (observer)", "outputData: ${workInfo.outputData}")
-//                            printLogD("WorkManager: (observer)", "------------\n\n")
-//                        }
-//                    }
-//                }
-//            })
-//    }
-
-//    private fun cancelWorkManagerJob(tag: String){
-//        WorkManager.getInstance(applicationContext)
-//            .cancelAllWorkByTag(tag)
-//    }
-
-//    private fun showUndoSnackbar_deleteNote(){
-//        onResponseReceived(
-//            response = Response(
-//                message = DELETE_NOTE_PENDING,
-//                uiComponentType = SnackBar(
-//                    object: SnackbarUndoCallback{
-//                        override fun undo() {
-//                            cancelWorkManagerJob(DELETE_NOTE_JOB_TAG)
-//                        }
-//                    }
-//                ),
-//                messageType = MessageType.Info()
-//            ),
-//            stateMessageCallback = object: StateMessageCallback{
-//                override fun removeMessageFromStack() {
-//                    // does nothing since not added to msg stack in this case
-//                }
-//            }
-//        )
-//    }
 
 
     private fun retrieveTopLevelFragmentIds(){

@@ -11,16 +11,17 @@ import com.codingwithmitch.cleannotes.core.business.state.DataState
 import com.codingwithmitch.cleannotes.core.business.state.MessageType
 import com.codingwithmitch.cleannotes.core.business.state.Response
 import com.codingwithmitch.cleannotes.core.business.state.UIComponentType
+import com.codingwithmitch.cleannotes.core.util.Constants.TAG
 import com.codingwithmitch.cleannotes.core.util.printLogD
-import com.codingwithmitch.cleannotes.di.AppComponent
 import com.codingwithmitch.cleannotes.notes.business.domain.repository.NoteRepository
 import com.codingwithmitch.cleannotes.notes.business.interactors.use_cases.DeleteNote
 import com.codingwithmitch.cleannotes.notes.business.interactors.use_cases.DeleteNote.Companion.DELETE_NOTE_FAILED
 import com.codingwithmitch.cleannotes.notes.business.interactors.use_cases.DeleteNote.Companion.DELETE_NOTE_SUCCESS
 import com.codingwithmitch.cleannotes.notes.di.NotesFeatureImpl
+import com.codingwithmitch.cleannotes.notes.framework.presentation.notelist.NoteListFragment.WorkManagerConstants.SHOW_UNDO_SNACKBAR
+import com.codingwithmitch.cleannotes.notes.framework.presentation.notelist.NoteListFragment.WorkManagerConstants.STATE_MESSAGE
 import com.codingwithmitch.cleannotes.notes.framework.presentation.notelist.state.NoteListViewState
 import com.codingwithmitch.cleannotes.presentation.BaseApplication
-import com.codingwithmitch.cleannotes.presentation.MainActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -44,7 +45,7 @@ constructor(
 
     override suspend fun doWork(): Result {
 
-        return try{
+        try{
 
             val appComponent = (applicationContext as BaseApplication).appComponent
             val noteComponent = (appComponent.notesFeature() as NotesFeatureImpl)
@@ -62,7 +63,7 @@ constructor(
             // show "undo" snackbar for canceling the delete
             setProgress(
                 workDataOf(
-                    MainActivity.STATE_MESSAGE to MainActivity.SHOW_UNDO_SNACKBAR
+                    STATE_MESSAGE to SHOW_UNDO_SNACKBAR
                 )
             )
             delay(DeleteNote.DELETE_UNDO_TIMEOUT)
@@ -104,38 +105,40 @@ constructor(
             when(result.stateMessage?.response?.message){
 
                 DELETE_NOTE_FAILED -> {
-                    Result.failure(
+                    setProgress(
                         workDataOf(
-                            MainActivity.STATE_MESSAGE to DELETE_NOTE_FAILED
+                            STATE_MESSAGE to DELETE_NOTE_FAILED
                         )
                     )
                 }
 
                 DELETE_NOTE_SUCCESS -> {
-                    Result.success(
+                    printLogD("DeleteNoteWorker", "SUCCESS")
+                    setProgress(
                         workDataOf(
-                            MainActivity.STATE_MESSAGE to DELETE_NOTE_SUCCESS
+                            STATE_MESSAGE to DELETE_NOTE_SUCCESS
                         )
                     )
                 }
 
                 else -> {
-                    Result.failure(
+                    setProgress(
                         workDataOf(
-                            MainActivity.STATE_MESSAGE to DELETE_NOTE_FAILED
+                            STATE_MESSAGE to DELETE_NOTE_FAILED
                         )
                     )
                 }
             }
+            return Result.success()
         }catch (e: CancellationException){
-            Log.e("WorkManager", "DeleteNoteWorker: cancelled! ${e.printStackTrace()}")
-            Result.failure(
+            Log.e(TAG, "DeleteNoteWorker: cancelled! ${e.printStackTrace()}")
+            setProgress(
                 workDataOf(
-                    MainActivity.STATE_MESSAGE to DELETE_NOTE_FAILED
+                    STATE_MESSAGE to DELETE_NOTE_FAILED
                 )
             )
+            return Result.failure()
         }
-
     }
 
 

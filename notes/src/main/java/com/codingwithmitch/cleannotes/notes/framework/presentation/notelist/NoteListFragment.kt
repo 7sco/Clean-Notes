@@ -1,15 +1,10 @@
 package com.codingwithmitch.cleannotes.notes.framework.presentation.notelist
 
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuInflater
 import android.view.View
-import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
-import android.widget.EditText
 import androidx.appcompat.widget.SearchView
 import androidx.core.os.bundleOf
-import androidx.core.view.children
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -27,19 +22,14 @@ import com.codingwithmitch.cleannotes.core.util.printLogD
 import com.codingwithmitch.cleannotes.notes.business.domain.model.Note
 import com.codingwithmitch.cleannotes.notes.business.interactors.use_cases.DeleteNote.Companion.DELETE_NOTE_FAILED
 import com.codingwithmitch.cleannotes.notes.business.interactors.use_cases.DeleteNote.Companion.DELETE_NOTE_SUCCESS
-import com.codingwithmitch.cleannotes.notes.business.interactors.use_cases.DeleteNote.Companion.DELETE_UNDO
 import com.codingwithmitch.cleannotes.notes.framework.presentation.BaseNoteFragment
 import com.codingwithmitch.cleannotes.notes.framework.presentation.notedetail.NOTE_DETAIL_SELECTED_NOTE_BUNDLE_KEY
 import com.codingwithmitch.cleannotes.notes.framework.presentation.notelist.state.NoteListStateEvent.*
 import com.codingwithmitch.cleannotes.notes.framework.presentation.notelist.state.NoteListViewState
-import com.codingwithmitch.cleannotes.notes.workmanager.ProgressWorker
-import com.codingwithmitch.cleannotes.notes.workmanager.ProgressWorker.Companion.Progress
 import com.codingwithmitch.cleannotes.presentation.MainActivity
-import com.codingwithmitch.cleannotes.presentation.MainActivity.WorkManagerConstants.STATE_MESSAGE
 import com.codingwithmitch.notes.R
 import kotlinx.android.synthetic.main.fragment_note_list.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.Dispatchers.Main
 import javax.inject.Inject
 
 
@@ -107,33 +97,27 @@ class NoteListFragment : BaseNoteFragment(R.layout.fragment_note_list),
 
     private fun setupWorkManagerJobObservers(){
         workManager
-            .getWorkInfosByTagLiveData(MainActivity.DELETE_NOTE_JOB_TAG)
+            .getWorkInfosByTagLiveData(DELETE_NOTE_JOB_TAG)
             .observe(viewLifecycleOwner, Observer { workInfoList: MutableList<WorkInfo?> ->
                 for(workInfo in workInfoList){
                     if (workInfo != null) {
+                        val progress = workInfo.progress
                         if(workInfo.state == WorkInfo.State.RUNNING){
-                            val progress = workInfo.progress
                             val stateMessage: String? = progress.getString(STATE_MESSAGE)
-                            printLogD("WorkManager: (observer)", "stateMessage: ${stateMessage}")
                             stateMessage?.let { message ->
-                                if(message.equals(MainActivity.SHOW_UNDO_SNACKBAR)){
+                                if(message.equals(SHOW_UNDO_SNACKBAR)){
                                     showUndoSnackbar_deleteNote()
                                 }
                             }
-                            val value = progress.getInt("Progress", 0)
-                            printLogD("WorkManager: (observer)", "progressValue: ${value}")
-                            printLogD("WorkManager: (observer)", "outputData: ${workInfo.outputData}")
-                            printLogD("WorkManager: (observer)", "------------\n\n")
                         }
-                        val resultData = workInfo.outputData
-                        when(resultData.getString(STATE_MESSAGE)){
-
-                            DELETE_NOTE_FAILED -> {
-                                viewModel.undoDelete()
-                            }
-
-                            DELETE_NOTE_SUCCESS -> {
+                        if(workInfo.state == WorkInfo.State.SUCCEEDED){
+                            if(progress.getString(STATE_MESSAGE)?.equals(DELETE_NOTE_SUCCESS) == true){
                                 onCompleteDelete()
+                            }
+                        }
+                        if(workInfo.state == WorkInfo.State.CANCELLED){
+                            if(progress.getString(STATE_MESSAGE)?.equals(DELETE_NOTE_FAILED) == true){
+                                viewModel.undoDelete()
                             }
                         }
                     }
@@ -144,11 +128,11 @@ class NoteListFragment : BaseNoteFragment(R.layout.fragment_note_list),
     private fun showUndoSnackbar_deleteNote(){
         uiController.onResponseReceived(
             response = Response(
-                message = MainActivity.DELETE_NOTE_PENDING,
+                message = DELETE_NOTE_PENDING,
                 uiComponentType = UIComponentType.SnackBar(
                     object : SnackbarUndoCallback {
                         override fun undo() {
-                            cancelWorkManagerJob(MainActivity.DELETE_NOTE_JOB_TAG)
+                            cancelWorkManagerJob(DELETE_NOTE_JOB_TAG)
                             viewModel.undoDelete()
                         }
                     }
@@ -252,10 +236,6 @@ class NoteListFragment : BaseNoteFragment(R.layout.fragment_note_list),
                     }
                     listAdapter?.submitList(noteList)
                     listAdapter?.notifyDataSetChanged()
-
-                    for(note in noteList){
-                        printLogD("ListFragment", "${note.title}")
-                    }
                 }
 
                 // a note been inserted or selected
@@ -276,12 +256,6 @@ class NoteListFragment : BaseNoteFragment(R.layout.fragment_note_list),
 
         viewModel.stateMessage.observe(viewLifecycleOwner, Observer { stateMessage ->
             stateMessage?.let { message ->
-//                if(message.response.message?.equals(DELETE_UNDO) == true){
-//                    viewModel.undoDelete()
-//                }
-//                if(message.response.message?.equals(DELETE_NOTE_SUCCESS) == true){
-//                    onCompleteDelete()
-//                }
                 uiController.onResponseReceived(
                     response = message.response,
                     stateMessageCallback = object: StateMessageCallback {
@@ -365,6 +339,14 @@ class NoteListFragment : BaseNoteFragment(R.layout.fragment_note_list),
             }
             true
         }
+    }
+
+    companion object WorkManagerConstants {
+
+        const val DELETE_NOTE_JOB_TAG = "delete_note"
+        const val STATE_MESSAGE = "state_message"
+        const val SHOW_UNDO_SNACKBAR = "show_undo_snackbar"
+        const val DELETE_NOTE_PENDING = "Delete pending..."
     }
 }
 
