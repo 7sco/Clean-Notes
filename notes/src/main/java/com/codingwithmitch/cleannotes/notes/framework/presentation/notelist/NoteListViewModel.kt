@@ -198,12 +198,14 @@ constructor(
 //        }
 //    }
 
-    fun removePendingNoteFromList(note: Note){
+    fun removePendingNoteFromList(note: Note?){
         val update = getCurrentViewStateOrNew()
         val list = update.noteList
-        list?.remove(note)
-        update.noteList = list
-        setViewState(update)
+        if(list?.contains(note) == true){
+            list.remove(note)
+            update.noteList = list
+            setViewState(update)
+        }
     }
 
 
@@ -260,6 +262,7 @@ constructor(
 
     fun onCompleteDelete(){
         printLogD("ListViewModel", "onCompleteDelete")
+        setNotePendingDelete(null)
         dataChannelManager.removeStateEvent(
             DeleteNoteEvent(
                 NotePendingDelete(null, -1)
@@ -297,15 +300,22 @@ constructor(
 
 
     fun setNotePendingDelete(note: Note?){
+        printLogD("ListViewModel", "setNotePendingDelete")
         val update = getCurrentViewStateOrNew()
-        update.notePendingDelete = NotePendingDelete(
-            note = note,
-            listPosition = findListPositionOfNote(note)
-        )
+        if(note != null){
+            update.notePendingDelete = NotePendingDelete(
+                note = note,
+                listPosition = findListPositionOfNote(note)
+            )
+        }
+        else{
+            update.notePendingDelete = null
+        }
         setViewState(update)
     }
 
     private fun findListPositionOfNote(note: Note?): Int {
+        printLogD("ListViewModel", "findListPositionOfNote")
         val viewState = getCurrentViewStateOrNew()
         viewState.noteList?.let { noteList ->
             for((index, item) in noteList.withIndex()){

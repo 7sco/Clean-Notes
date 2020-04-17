@@ -75,6 +75,7 @@ class NoteListFragment : BaseNoteFragment(R.layout.fragment_note_list),
                     note = note,
                     listPosition = viewModel.getNoteList().indexOf(note)
                 )
+                clearDeleteArgs()
             }
         }
     }
@@ -96,7 +97,7 @@ class NoteListFragment : BaseNoteFragment(R.layout.fragment_note_list),
     private fun setupWorkManagerJobObservers(){
 
         workManager
-            .getWorkInfosByTagLiveData(DELETE_NOTE_JOB_TAG)
+            .getWorkInfosForUniqueWorkLiveData(DELETE_NOTE_JOB_TAG)
             .observe(viewLifecycleOwner, Observer { workInfoList: MutableList<WorkInfo?> ->
                 for(workInfo in workInfoList){
                     if (workInfo != null) {
@@ -114,40 +115,26 @@ class NoteListFragment : BaseNoteFragment(R.layout.fragment_note_list),
                             }
                         }
                         if(workInfo.state == WorkInfo.State.SUCCEEDED){
-                            onCompleteDelete(progress)
+                            onDeleteSuccess()
                         }
                         if(workInfo.state == WorkInfo.State.CANCELLED){
-                            onCompleteDelete(progress)
+                            onDeleteFailed()
                         }
+
+                        printLogD("NoteListFragment", "observer: ${progress}, state: ${workInfo.state}")
                     }
                 }
             })
     }
 
-    private fun onCompleteDelete(data: Data){
-        when(data.getString(DELETE_NOTE_STATE_MESSAGE)){
-
-            DELETE_NOTE_SUCCESS -> {
-                onDeleteSuccess()
-            }
-
-            DELETE_NOTE_FAILED -> {
-                onDeleteFailed()
-            }
-        }
-    }
-
     private fun onDeleteSuccess(){
-        clearDeleteArgs()
         viewModel.onCompleteDelete()
     }
 
     private fun onDeleteFailed(){
-        undoPendingNoteDelete()
+        viewModel.undoDelete()
         viewModel.onCompleteDelete()
     }
-
-    private fun undoPendingNoteDelete() = viewModel.undoDelete()
 
     private fun showUndoSnackbar_deleteNote(){
         uiController.onResponseReceived(
@@ -172,7 +159,7 @@ class NoteListFragment : BaseNoteFragment(R.layout.fragment_note_list),
     }
 
     private fun cancelWorkManagerJob(tag: String){
-        workManager.cancelAllWorkByTag(tag)
+        workManager.cancelUniqueWork(tag)
     }
 
     override fun onResume() {
@@ -266,9 +253,9 @@ class NoteListFragment : BaseNoteFragment(R.layout.fragment_note_list),
                     navigateToDetailFragment(newNote)
                 }
 
-//                viewState.notePendingDelete?.let { note ->
-//                    viewModel.removePendingNoteFromList()
-//                }
+                viewState.notePendingDelete?.let { note ->
+                    viewModel.removePendingNoteFromList(note.note)
+                }
             }
         })
 

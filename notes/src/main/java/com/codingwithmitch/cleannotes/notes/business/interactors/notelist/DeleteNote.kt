@@ -16,10 +16,14 @@ import com.codingwithmitch.cleannotes.notes.framework.presentation.notelist.Note
 import com.codingwithmitch.cleannotes.notes.framework.presentation.notelist.state.NoteListViewState
 import com.codingwithmitch.cleannotes.notes.framework.presentation.notelist.state.NoteListViewState.*
 import com.codingwithmitch.cleannotes.presentation.BaseApplication
+import com.google.common.util.concurrent.ListenableFuture
 import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import java.lang.Runnable
 import java.util.concurrent.CancellationException
+import java.util.concurrent.Executor
 import javax.inject.Inject
 
 const val DELETENOTE_PENDING_ERROR = "There is already a pending delete operation."
@@ -45,7 +49,7 @@ class DeleteNote(
             emit(buildRemovePendingNoteFromListMessage(notePendingDelete))
 
             // delegate to WorkManager to finish
-            queueJobWithWorkManager((notePendingDelete.note as Note).id)
+           queueJobWithWorkManager((notePendingDelete.note as Note).id)
         }
         else{
             emit(buildGenericErrorDeletingNote())
@@ -64,13 +68,12 @@ class DeleteNote(
         )
     }
 
-    private fun queueJobWithWorkManager(primaryKey: Int){
+    private fun queueJobWithWorkManager(primaryKey: Int) {
         val inputData = workDataOf(
             DELETE_NOTE_WORKER_ARG_PK to primaryKey
         )
         val workRequest = OneTimeWorkRequestBuilder<DeleteNoteWorker>()
             .setInputData(inputData)
-            .addTag(DELETE_NOTE_JOB_TAG)
             .build()
 
         workManager
@@ -79,6 +82,7 @@ class DeleteNote(
                 ExistingWorkPolicy.REPLACE,
                 workRequest
             )
+
     }
 
     // when job is complete, emit StateEvent to DataChannelManager
@@ -120,6 +124,7 @@ class DeleteNote(
         override suspend fun doWork(): Result {
 
             try{
+
                 inject()
 
                 if(!::noteRepository.isInitialized){
@@ -130,14 +135,17 @@ class DeleteNote(
                     throw CancellationException("DeleteNoteWorker: Missing primary key.")
                 }
 
-
                 // show "undo" snackbar for canceling the delete
                 setProgressShowUndoSnackbar()
+
+                delay(100)
+
+                clearProgress(DELETE_NOTE_STATE_MESSAGE)
 
                 // give user time to "undo"
                 delay(DELETE_UNDO_TIMEOUT)
 
-                val cacheResult = safeCacheCall(Dispatchers.IO){
+                val cacheResult = safeCacheCall(IO){
                     noteRepository.deleteNote(primaryKey)
                 }
 
@@ -147,11 +155,12 @@ class DeleteNote(
                 ){
                     override suspend fun handleSuccess(resultObj: Int): DataState<NoteListViewState> {
                         return if(resultObj > 0){
+                            printLogD("observer: DeleteNote", "done getting result")
                             DataState.data(
                                 response = Response(
                                     message = DELETE_NOTE_SUCCESS,
                                     uiComponentType = UIComponentType.None(),
-                                    messageType = MessageType.Success()
+                                    messageType = MessageType.None()
                                 ),
                                 data = null,
                                 stateEvent = null
@@ -161,8 +170,8 @@ class DeleteNote(
                             DataState.data(
                                 response = Response(
                                     message = DELETE_NOTE_FAILED,
-                                    uiComponentType = UIComponentType.Toast(),
-                                    messageType = MessageType.Error()
+                                    uiComponentType = UIComponentType.None(),
+                                    messageType = MessageType.None()
                                 ),
                                 data = null,
                                 stateEvent = null
@@ -170,6 +179,15 @@ class DeleteNote(
                         }
                     }
                 }.getResult()
+
+                // BUG?
+                // very weird...
+                // This MUST be here or the when statement (below) never executes...
+                setProgress(
+                    workDataOf(
+                        "result" to "done getting result from CacheResponseHandler."
+                    )
+                )
 
                 when(result.stateMessage?.response?.message){
 
@@ -189,8 +207,18 @@ class DeleteNote(
             }catch (e: CancellationException){
                 Log.e(Constants.TAG, "DeleteNoteWorker: cancelled! ${e.printStackTrace()}")
                 setProgressDeleteFailed()
+                delay(200)
                 return Result.failure()
             }
+        }
+
+        // clear the progress so the same thing isn't emitted on cancelation
+        private suspend fun clearProgress(key: String){
+            setProgress(
+                workDataOf(
+                    key to ""
+                )
+            )
         }
 
         private suspend fun setProgressShowUndoSnackbar(){
