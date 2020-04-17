@@ -303,6 +303,10 @@ constructor(
         }
     }
 
+    fun countNumNotesInCache() {
+        setStateEvent(GetNumNotesInCacheEvent())
+    }
+
     fun setLayoutManagerState(layoutManagerState: Parcelable){
         val update = getCurrentViewStateOrNew()
         update.layoutManagerState = layoutManagerState

@@ -13,6 +13,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.work.*
 import com.codingwithmitch.cleannotes.core.business.state.*
 import com.codingwithmitch.cleannotes.core.framework.DialogInputCaptureCallback
@@ -71,25 +72,10 @@ class NoteListFragment : BaseNoteFragment(R.layout.fragment_note_list),
 
         setupUI()
         setupRecyclerView()
+        setupSearchView()
+        setupSwipeRefresh()
+        setupFAB()
         subscribeObservers()
-        initSearchView()
-
-        add_new_note_fab.setOnClickListener {
-            uiController.displayInputCaptureDialog(
-                getString(com.codingwithmitch.cleannotes.R.string.text_enter_a_title),
-                object: DialogInputCaptureCallback{
-                    override fun onTextCaptured(text: String) {
-                        val newNote = viewModel.createNewNote(title = text)
-                        viewModel.setStateEvent(
-                            InsertNewNoteEvent(
-                                title = newNote.title,
-                                body = ""
-                            )
-                        )
-                    }
-                }
-            )
-        }
 
         restoreInstanceState(savedInstanceState)
         setupWorkManagerJobObservers()
@@ -148,13 +134,12 @@ class NoteListFragment : BaseNoteFragment(R.layout.fragment_note_list),
     }
 
     private fun cancelWorkManagerJob(tag: String){
-        workManager
-            .cancelAllWorkByTag(tag)
+        workManager.cancelAllWorkByTag(tag)
     }
 
     override fun onResume() {
         super.onResume()
-        viewModel.setStateEvent(GetNumNotesInCacheEvent())
+        viewModel.countNumNotesInCache()
         viewModel.restoreFromCache()
     }
 
@@ -324,7 +309,7 @@ class NoteListFragment : BaseNoteFragment(R.layout.fragment_note_list),
         }
     }
 
-    private fun initSearchView(){
+    private fun setupSearchView(){
 
         val searchPlate: SearchView.SearchAutoComplete?
                 = search_view.findViewById(androidx.appcompat.R.id.search_src_text)
@@ -333,11 +318,38 @@ class NoteListFragment : BaseNoteFragment(R.layout.fragment_note_list),
             if (actionId == EditorInfo.IME_ACTION_UNSPECIFIED
                 || actionId == EditorInfo.IME_ACTION_SEARCH ) {
                 val searchQuery = v.text.toString()
-                viewModel.setQuery(searchQuery).let{
-                    viewModel.loadFirstPage()
-                }
+                viewModel.setQuery(searchQuery)
+                startNewSearch()
             }
             true
+        }
+    }
+
+    private fun setupFAB(){
+        add_new_note_fab.setOnClickListener {
+            uiController.displayInputCaptureDialog(
+                getString(com.codingwithmitch.cleannotes.R.string.text_enter_a_title),
+                object: DialogInputCaptureCallback{
+                    override fun onTextCaptured(text: String) {
+                        val newNote = viewModel.createNewNote(title = text)
+                        viewModel.setStateEvent(
+                            InsertNewNoteEvent(
+                                title = newNote.title,
+                                body = ""
+                            )
+                        )
+                    }
+                }
+            )
+        }
+    }
+
+    private fun startNewSearch() = viewModel.loadFirstPage()
+
+    private fun setupSwipeRefresh(){
+        swipe_refresh.setOnRefreshListener {
+            startNewSearch()
+            swipe_refresh.isRefreshing = false
         }
     }
 
@@ -348,6 +360,7 @@ class NoteListFragment : BaseNoteFragment(R.layout.fragment_note_list),
         const val SHOW_UNDO_SNACKBAR = "show_undo_snackbar"
         const val DELETE_NOTE_PENDING = "Delete pending..."
     }
+    
 }
 
 
