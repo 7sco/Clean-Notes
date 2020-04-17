@@ -31,11 +31,13 @@ abstract class DataChannelManager<ViewState> {
             .onEach{ dataState ->
                 dataState.data?.let { data ->
                     handleNewData(data)
-                    removeStateEvent(dataState.stateEvent)
                 }
                 dataState.stateMessage?.let { stateMessage ->
                     handleNewStateMessage(stateMessage)
-                    removeStateEvent(dataState.stateEvent)
+
+                }
+                dataState.stateEvent?.let { stateEvent ->
+                    removeStateEvent(stateEvent)
                 }
             }
             .launchIn(CoroutineScope(Main))
@@ -103,7 +105,7 @@ abstract class DataChannelManager<ViewState> {
     private fun addStateEvent(stateEvent: StateEvent)
             = stateEventManager.addStateEvent(stateEvent)
 
-    private fun removeStateEvent(stateEvent: StateEvent?)
+    fun removeStateEvent(stateEvent: StateEvent?)
             = stateEventManager.removeStateEvent(stateEvent)
 
     private fun isStateEventActive(stateEvent: StateEvent)

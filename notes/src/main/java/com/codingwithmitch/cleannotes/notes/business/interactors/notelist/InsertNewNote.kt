@@ -1,55 +1,59 @@
-package com.codingwithmitch.cleannotes.notes.business.interactors.use_cases
+package com.codingwithmitch.cleannotes.notes.business.interactors.notelist
 
 import com.codingwithmitch.cleannotes.core.business.cache.CacheResponseHandler
 import com.codingwithmitch.cleannotes.core.business.safeCacheCall
 import com.codingwithmitch.cleannotes.core.business.state.*
-import com.codingwithmitch.cleannotes.core.util.printLogD
 import com.codingwithmitch.cleannotes.notes.business.domain.repository.NoteRepository
-import com.codingwithmitch.cleannotes.notes.framework.presentation.notedetail.state.NoteDetailViewState
+import com.codingwithmitch.cleannotes.notes.framework.datasource.mappers.NoteFactory
+import com.codingwithmitch.cleannotes.notes.framework.presentation.notelist.state.NoteListViewState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
-class UpdateNote(
-    private val noteRepository: NoteRepository
+class InsertNewNote(
+    private val noteRepository: NoteRepository,
+    private val noteFactory: NoteFactory
 ){
 
-    fun updateNote(
-        primaryKey: Int,
-        newTitle: String,
-        newBody: String?,
+    fun insertNewNote(
+        title: String,
+        body: String,
         stateEvent: StateEvent
-    ): Flow<DataState<NoteDetailViewState>> = flow {
+    ): Flow<DataState<NoteListViewState>> = flow {
 
         val cacheResult = safeCacheCall(Dispatchers.IO){
-            noteRepository.updateNote(
-                primaryKey = primaryKey,
-                newTitle = newTitle,
-                newBody = newBody
-            )
+            noteRepository.insertNewNote(title, body)
         }
 
         emit(
-            object: CacheResponseHandler<NoteDetailViewState, Int>(
+            object: CacheResponseHandler<NoteListViewState, Long>(
                 response = cacheResult,
                 stateEvent = stateEvent
             ){
-                override suspend fun handleSuccess(resultObj: Int): DataState<NoteDetailViewState> {
+                override suspend fun handleSuccess(resultObj: Long): DataState<NoteListViewState> {
                     return if(resultObj > 0){
+                        val viewState =
+                            NoteListViewState(
+                                newNote = noteFactory.create(
+                                    id = resultObj.toInt(),
+                                    title = title,
+                                    body = body
+                                )
+                            )
                         DataState.data(
                             response = Response(
-                                message = UPDATE_NOTE_SUCCESS,
+                                message = INSERT_NOTE_SUCCESS,
                                 uiComponentType = UIComponentType.Toast(),
                                 messageType = MessageType.Success()
                             ),
-                            data = null,
+                            data = viewState,
                             stateEvent = stateEvent
                         )
                     }
                     else{
                         DataState.data(
                             response = Response(
-                                message = UPDATE_NOTE_FAILED,
+                                message = INSERT_NOTE_FAILED,
                                 uiComponentType = UIComponentType.Toast(),
                                 messageType = MessageType.Error()
                             ),
@@ -63,9 +67,7 @@ class UpdateNote(
     }
 
     companion object{
-        val UPDATE_NOTE_SUCCESS = "Successfully updated note."
-        val UPDATE_NOTE_FAILED = "Failed to update note."
-        val UPDATE_NOTE_FAILED_PK = "Update failed. Note is missing primary key."
-
+        val INSERT_NOTE_SUCCESS = "Successfully inserted new note."
+        val INSERT_NOTE_FAILED = "Failed to insert new note."
     }
 }

@@ -12,9 +12,9 @@ import com.codingwithmitch.cleannotes.R.drawable
 import com.codingwithmitch.cleannotes.core.business.state.*
 import com.codingwithmitch.cleannotes.core.framework.*
 import com.codingwithmitch.cleannotes.notes.business.domain.model.Note
-import com.codingwithmitch.cleannotes.notes.business.interactors.use_cases.DeleteNote.Companion.DELETE_ARE_YOU_SURE
-import com.codingwithmitch.cleannotes.notes.business.interactors.use_cases.UpdateNote.Companion.UPDATE_NOTE_FAILED_PK
-import com.codingwithmitch.cleannotes.notes.business.interactors.use_cases.UpdateNote.Companion.UPDATE_NOTE_SUCCESS
+import com.codingwithmitch.cleannotes.notes.business.interactors.notelist.DeleteNote.Companion.DELETE_ARE_YOU_SURE
+import com.codingwithmitch.cleannotes.notes.business.interactors.notedetail.UpdateNote.Companion.UPDATE_NOTE_FAILED_PK
+import com.codingwithmitch.cleannotes.notes.business.interactors.notedetail.UpdateNote.Companion.UPDATE_NOTE_SUCCESS
 import com.codingwithmitch.cleannotes.notes.framework.presentation.BaseNoteFragment
 import com.codingwithmitch.cleannotes.notes.framework.presentation.notedetail.state.CollapsingToolbarState.Collapsed
 import com.codingwithmitch.cleannotes.notes.framework.presentation.notedetail.state.CollapsingToolbarState.Expanded

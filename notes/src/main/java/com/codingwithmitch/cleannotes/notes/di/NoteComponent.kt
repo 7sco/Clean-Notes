@@ -2,10 +2,11 @@ package com.codingwithmitch.notes.di
 
 import com.codingwithmitch.cleannotes.core.di.scopes.FeatureScope
 import com.codingwithmitch.cleannotes.di.features.notes.NotesFeature
+import com.codingwithmitch.cleannotes.notes.business.interactors.notelist.DeleteNote
+import com.codingwithmitch.cleannotes.notes.business.interactors.notelist.DeleteNote.*
 import com.codingwithmitch.cleannotes.notes.di.NoteViewModelModule
 import com.codingwithmitch.cleannotes.notes.framework.presentation.notedetail.NoteDetailFragment
 import com.codingwithmitch.cleannotes.notes.framework.presentation.notelist.NoteListFragment
-import com.codingwithmitch.cleannotes.notes.workmanager.DeleteNoteWorker
 import dagger.BindsInstance
 import dagger.Component
 import kotlinx.coroutines.ExperimentalCoroutinesApi

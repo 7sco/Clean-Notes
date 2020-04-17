@@ -2,7 +2,6 @@ package com.codingwithmitch.notes.di
 
 import androidx.room.Room
 import androidx.work.WorkManager
-import androidx.work.WorkerFactory
 import com.codingwithmitch.cleannotes.core.di.scopes.FeatureScope
 import com.codingwithmitch.cleannotes.di.features.notes.NotesFeature
 import com.codingwithmitch.cleannotes.notes.business.data.datasource.NoteCacheDataSource
@@ -10,10 +9,11 @@ import com.codingwithmitch.cleannotes.notes.business.data.repository.NoteReposit
 import com.codingwithmitch.cleannotes.notes.framework.datasource.mappers.NoteEntityMapper
 import com.codingwithmitch.cleannotes.notes.di.NotesFeatureImpl
 import com.codingwithmitch.cleannotes.notes.business.domain.repository.NoteRepository
-import com.codingwithmitch.cleannotes.notes.business.interactors.*
 import com.codingwithmitch.cleannotes.presentation.BaseApplication
 import com.codingwithmitch.cleannotes.core.business.DateUtil
-import com.codingwithmitch.cleannotes.notes.business.interactors.use_cases.*
+import com.codingwithmitch.cleannotes.notes.business.interactors.notedetail.NoteDetailInteractors
+import com.codingwithmitch.cleannotes.notes.business.interactors.notedetail.UpdateNote
+import com.codingwithmitch.cleannotes.notes.business.interactors.notelist.*
 import com.codingwithmitch.cleannotes.notes.framework.datasource.mappers.NoteFactory
 import com.codingwithmitch.notes.datasource.cache.db.NoteDao
 import com.codingwithmitch.notes.datasource.cache.db.NoteDatabase
@@ -108,9 +108,11 @@ object NoteModule {
     @Provides
     fun provideNoteDetailInteractors(
         noteRepository: NoteRepository
-    ): NoteDetailInteractors{
+    ): NoteDetailInteractors {
         return NoteDetailInteractors(
-            UpdateNote(noteRepository)
+            UpdateNote(
+                noteRepository
+            )
         )
     }
 
@@ -138,13 +140,12 @@ object NoteModule {
         noteRepository: NoteRepository,
         noteFactory: NoteFactory,
         workManager: WorkManager
-    ): NoteListInteractors{
+    ): NoteListInteractors {
         return NoteListInteractors(
             InsertNewNote(noteRepository, noteFactory),
-            DeleteNote(workManager),
+            DeleteNote(workManager, noteRepository),
             SearchNotes(noteRepository),
             GetNumNotes(noteRepository)
-
         )
     }
 

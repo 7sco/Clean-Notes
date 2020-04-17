@@ -6,7 +6,8 @@ import com.codingwithmitch.cleannotes.core.di.scopes.FeatureScope
 import com.codingwithmitch.cleannotes.core.framework.BaseViewModel
 import com.codingwithmitch.cleannotes.core.util.printLogD
 import com.codingwithmitch.cleannotes.notes.business.domain.model.Note
-import com.codingwithmitch.cleannotes.notes.business.interactors.NoteListInteractors
+import com.codingwithmitch.cleannotes.notes.business.interactors.notelist.DELETENOTE_PENDING_ERROR
+import com.codingwithmitch.cleannotes.notes.business.interactors.notelist.NoteListInteractors
 import com.codingwithmitch.cleannotes.notes.framework.datasource.mappers.NOTE_FILTER_DATE_CREATED
 import com.codingwithmitch.cleannotes.notes.framework.datasource.mappers.NOTE_ORDER_DESC
 import com.codingwithmitch.cleannotes.notes.framework.datasource.mappers.NoteFactory
@@ -15,10 +16,11 @@ import com.codingwithmitch.cleannotes.notes.framework.presentation.notelist.stat
 import com.codingwithmitch.cleannotes.notes.framework.presentation.notelist.state.NoteListViewState.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 
-const val DELETE_PENDING_ERROR = "There is already a pending delete operation."
+
 const val NOTE_PENDING_DELETE_BUNDLE_KEY = "pending_delete"
 
 @ExperimentalCoroutinesApi
@@ -46,6 +48,12 @@ constructor(
             viewState.newNote?.let { note ->
                 setNote(note)
             }
+
+            viewState.notePendingDelete?.let { notePendingDelete ->
+                notePendingDelete.note?.let { note ->
+                    removePendingNoteFromList(note)
+                }
+            }
         }
 
     }
@@ -63,9 +71,16 @@ constructor(
                     )
                 }
 
+//                is DeleteNoteEvent -> {
+//                    noteInteractors.deleteNote.deleteNote(
+//                        primaryKey = stateEvent.primaryKey,
+//                        stateEvent = stateEvent
+//                    )
+//                }
+
                 is DeleteNoteEvent -> {
                     noteInteractors.deleteNote.deleteNote(
-                        primaryKey = stateEvent.primaryKey,
+                        notePendingDelete = stateEvent.notePendingDelete,
                         stateEvent = stateEvent
                     )
                 }
@@ -101,10 +116,37 @@ constructor(
             }
             launchJob(stateEvent, job)
         }
+        else{
+            when(stateEvent){
+
+                is DeleteNoteEvent -> {
+                    setStateEvent(
+                        CreateStateMessageEvent(
+                            buildDeleteAlreadyPendingError()
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    // show error telling user a delete is currently pending
+    private fun buildDeleteAlreadyPendingError(): StateMessage {
+        return StateMessage(
+                response = Response(
+                    message = DELETENOTE_PENDING_ERROR,
+                    uiComponentType = UIComponentType.Toast(),
+                    messageType = MessageType.Info()
+                )
+            )
     }
 
     override fun initNewViewState(): NoteListViewState {
         return NoteListViewState()
+    }
+
+    fun getNoteList(): List<Note> {
+        return getCurrentViewStateOrNew().noteList?: ArrayList()
     }
 
     private fun getFilter(): String {
@@ -145,17 +187,25 @@ constructor(
         setViewState(update)
     }
 
-    fun removePendingNoteFromList(){
-        val update = getCurrentViewStateOrNew()
-        val pendingNote = update.notePendingDelete
-        val list = update.noteList
-        if(list?.contains(pendingNote?.note) == true){
-            list.remove(pendingNote?.note)
-            update.noteList = list
-            setViewState(update)
-        }
+//    fun removePendingNoteFromList(){
+//        val update = getCurrentViewStateOrNew()
+//        val pendingNote = update.notePendingDelete
+//        val list = update.noteList
+//        if(list?.contains(pendingNote?.note) == true){
+//            list.remove(pendingNote?.note)
+//            update.noteList = list
+//            setViewState(update)
+//        }
+//    }
 
+    fun removePendingNoteFromList(note: Note){
+        val update = getCurrentViewStateOrNew()
+        val list = update.noteList
+        list?.remove(note)
+        update.noteList = list
+        setViewState(update)
     }
+
 
     // can be selected from Recyclerview or created new from dialog
     fun setNote(note: Note?){
@@ -170,42 +220,63 @@ constructor(
         setViewState(update)
     }
 
-    fun isDeletePending(): Boolean{
-        if(isJobAlreadyActive(DeleteNoteEvent(primaryKey = 0))){
-            setStateEvent(
-                CreateStateMessageEvent(
-                    stateMessage = StateMessage(
-                        response = Response(
-                            message = DELETE_PENDING_ERROR,
-                            uiComponentType = UIComponentType.Toast(),
-                            messageType = MessageType.Info()
-                        )
-                    )
-                )
-            )
-            return true
-        }
-        else{
-            return false
-        }
-    }
+//    fun isDeletePending(): Boolean{
+//        if(isJobAlreadyActive(DeleteNoteEvent(primaryKey = 0))){
+//            setStateEvent(
+//                CreateStateMessageEvent(
+//                    stateMessage = StateMessage(
+//                        response = Response(
+//                            message = DELETENOTE_PENDING_ERROR,
+//                            uiComponentType = UIComponentType.Toast(),
+//                            messageType = MessageType.Info()
+//                        )
+//                    )
+//                )
+//            )
+//            return true
+//        }
+//        else{
+//            return false
+//        }
+//    }
+
+//    fun onCompleteDelete(){
+//        printLogD("ListViewModel", "onCompleteDelete")
+//        setNotePendingDelete(null)
+//    }
+
+//    fun beginPendingDelete(){
+//        // remove from viewstate
+//        val update = getCurrentViewStateOrNew()
+//        update.notePendingDelete?.let { notePendingDelete ->
+//            notePendingDelete.note?.let { note ->
+//                update.noteList?.remove(note)
+//                setViewState(update)
+//                setStateEvent(DeleteNoteEvent(note.id))
+//            }
+//        }
+//
+//    }
 
     fun onCompleteDelete(){
         printLogD("ListViewModel", "onCompleteDelete")
-        setNotePendingDelete(null)
+        dataChannelManager.removeStateEvent(
+            DeleteNoteEvent(
+                NotePendingDelete(null, -1)
+            )
+        )
     }
 
-    fun beginPendingDelete(){
-        // remove from viewstate
-        val update = getCurrentViewStateOrNew()
-        update.notePendingDelete?.let { notePendingDelete ->
-            notePendingDelete.note?.let { note ->
-                update.noteList?.remove(note)
-                setViewState(update)
-                setStateEvent(DeleteNoteEvent(note.id))
-            }
-        }
-
+    fun beginPendingDelete(note: Note, listPosition: Int){
+        setNotePendingDelete(note)
+        setStateEvent(
+            DeleteNoteEvent(
+                notePendingDelete = NotePendingDelete(
+                    note,
+                    listPosition
+                )
+            )
+        )
     }
 
     fun undoDelete(){

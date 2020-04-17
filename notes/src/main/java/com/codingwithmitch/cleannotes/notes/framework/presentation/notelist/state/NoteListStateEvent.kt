@@ -2,6 +2,8 @@ package com.codingwithmitch.cleannotes.notes.framework.presentation.notelist.sta
 
 import com.codingwithmitch.cleannotes.core.business.state.StateEvent
 import com.codingwithmitch.cleannotes.core.business.state.StateMessage
+import com.codingwithmitch.cleannotes.notes.business.domain.model.Note
+import com.codingwithmitch.cleannotes.notes.framework.presentation.notelist.state.NoteListViewState.*
 
 sealed class NoteListStateEvent: StateEvent {
 
@@ -22,7 +24,7 @@ sealed class NoteListStateEvent: StateEvent {
     }
 
     class DeleteNoteEvent(
-        val primaryKey: Int
+        val notePendingDelete: NotePendingDelete
     ): NoteListStateEvent(){
 
         override fun errorInfo(): String {
